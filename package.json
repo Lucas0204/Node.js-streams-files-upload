@@ -1,0 +1,22 @@
+{
+  "name": "gdrive-webapi",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node src/server.js",
+    "test": "npx jest --runInBand",
+    "test:watch": "npx jest --watchAll --runInBand",
+    "test:cov": "npx jest --no-cache --runInBand --coverage"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "pretty-bytes": "^5.6.0",
+    "socket.io": "^4.2.0"
+  },
+  "devDependencies": {
+    "jest": "^27.1.1",
+    "supertest": "^6.1.6"
+  }
+}
