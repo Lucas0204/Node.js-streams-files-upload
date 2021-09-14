@@ -18,7 +18,7 @@ describe('Routes test suite', () => {
         mock.spyOn(FileHelper, FileHelper.getFilesStatus.name)
             .mockResolvedValue(filesStatusesMock)
 
-        const response = await request(app).get('/')
+        const response = await request(app).get('/files')
         
         expect(response.status).toBe(200)
     })
