@@ -3,9 +3,15 @@ const path = require('path')
 const fs = require('fs')
 const prettyBytes = require('pretty-bytes')
 
+const { pipeline } = require('stream')
+const { promisify } = require('util')
+
+const pipelineAsync = promisify(pipeline)
+
 class UploadHandler {
     constructor(downloadsFolder) {
         this.downloadsFolder = downloadsFolder
+        this.messageTimeDelay = 200
     }
 
     upload(headers, onFinish) {
@@ -20,20 +26,45 @@ class UploadHandler {
         return busboy
     }
 
-    onFile(fieldname, file, filename) {
+    async onFile(fieldname, file, filename) {
         const saveToFile = path.resolve(this.downloadsFolder, filename)
-            
-        file.pipe(fs.createWriteStream(saveToFile))
-            
-        file.on('data', function(data) {
-            this.bytesStreamed = this.bytesStreamed ? this.bytesStreamed : 0
-            this.bytesStreamed += data.length
-            console.log(`streamed ${prettyBytes(this.bytesStreamed)}`)
-        })
+
+        await pipelineAsync(
+            file,
+            this.handleFileBytes.apply(this, []),
+            fs.createWriteStream(saveToFile)
+        )
     
-        file.on('end', () => {
-            console.log(`Finished ${filename}`)
-        })
+        console.log(`finished ${filename}`)
+    }
+
+    canExecute(lastExecution) {
+        return (Date.now() - lastExecution) >= this.messageTimeDelay
+    }
+
+    handleFileBytes() {
+        this.lastMessageSent = Date.now()
+        
+        async function* handleData(source) {
+
+            let processedAlready = 0
+
+            for await (let chunk of source) {
+                yield chunk
+
+                processedAlready += chunk.length
+
+                if (!this.canExecute(this.lastMessageSent)) {
+                    continue
+                }
+
+                this.lastMessageSent = Date.now()
+
+                console.log(prettyBytes(processedAlready))
+            }
+        }
+        
+        return handleData.bind(this)
     }
 }
 
