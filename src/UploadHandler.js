@@ -1,6 +1,7 @@
-const Busboy = require('busboy')
 const path = require('path')
 const fs = require('fs')
+
+const Busboy = require('busboy')
 const prettyBytes = require('pretty-bytes')
 
 const { pipeline } = require('stream')
@@ -31,7 +32,7 @@ class UploadHandler {
 
         await pipelineAsync(
             file,
-            this.handleFileBytes.apply(this, []),
+            this.handleFileBytes.apply(this, [ filename ]),
             fs.createWriteStream(saveToFile)
         )
     
@@ -42,12 +43,13 @@ class UploadHandler {
         return (Date.now() - lastExecution) >= this.messageTimeDelay
     }
 
-    handleFileBytes() {
+    handleFileBytes(filename) {
         this.lastMessageSent = Date.now()
         
         async function* handleData(source) {
 
             let processedAlready = 0
+            const socket = this.getSocket()
 
             for await (let chunk of source) {
                 yield chunk
@@ -61,10 +63,16 @@ class UploadHandler {
                 this.lastMessageSent = Date.now()
 
                 console.log(prettyBytes(processedAlready))
+                socket.emit('file-upload', { processedAlready: prettyBytes(processedAlready), filename })
             }
         }
         
         return handleData.bind(this)
+    }
+
+    getSocket() {
+        const socket = require('./server')
+        return socket
     }
 }
 

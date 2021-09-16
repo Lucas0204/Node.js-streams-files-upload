@@ -1,16 +1,21 @@
 const socketIo = require('socket.io')
 
-function socket(server) {
-    const io = socketIo(server, {
-        cors: {
-            origin: '*',
-            methods: ['*']
-        }
-    })
+class Socket {
 
-    io.on('connection', socket => {
-        console.log(`Connected: ${socket.id}`)
-    })
+    constructor(server) {
+        this.server = server
+    }
+
+    connect(cb) {
+        const io = socketIo(this.server, {
+            cors: {
+                origin: '*',
+                credentials: false
+            }
+        })
+    
+        io.on('connection', cb)
+    }
 }
 
-module.exports = socket
+module.exports = Socket

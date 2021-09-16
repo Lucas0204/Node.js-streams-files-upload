@@ -1,26 +1,13 @@
 const routes = require('express').Router()
-const path = require('path')
 
-const FileHelper = require('./FileHelper')
-const UploadHandler = require('./UploadHandler')
-const downloadsFolder = path.resolve(__dirname, '..', 'downloads')
+const GetFilesStatusController = require('./controllers/getFilesStatusController')
+const UploadFilesController = require('./controllers/uploadFilesController')
 
-const fileHelper = FileHelper
+const getFilesStatusController = new GetFilesStatusController()
+const uploadFilesController = new UploadFilesController()
 
-routes.get('/files', async (req, res) => {
-    const status = await fileHelper.getFilesStatus(downloadsFolder)
-    return res.send(status)
-})
+routes.get('/files', getFilesStatusController.handle)
 
-routes.post('/files', async (req, res) => {
-
-    const uploadHandler = new UploadHandler(downloadsFolder)
-
-    const busboy = uploadHandler.upload(req.headers, () => {
-        return res.send('finish!')
-    })
-
-    req.pipe(busboy)
-})
+routes.post('/files', uploadFilesController.handle)
 
 module.exports = routes
