@@ -6,7 +6,7 @@ class Socket {
         this.server = server
     }
 
-    connect(cb) {
+    connect() {
         const io = socketIo(this.server, {
             cors: {
                 origin: '*',
@@ -14,7 +14,10 @@ class Socket {
             }
         })
     
-        io.on('connection', cb)
+        io.on('connection', socket => {
+            console.log(`Connected: ${socket.id}`)
+            module.exports = socket
+        })
     }
 }
 

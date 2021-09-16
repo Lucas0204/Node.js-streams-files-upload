@@ -39,17 +39,12 @@ class UploadHandler {
         console.log(`finished ${filename}`)
     }
 
-    canExecute(lastExecution) {
-        return (Date.now() - lastExecution) >= this.messageTimeDelay
-    }
-
     handleFileBytes(filename) {
         this.lastMessageSent = Date.now()
         
         async function* handleData(source) {
-
             let processedAlready = 0
-            const socket = this.getSocket()
+            const socket = this.getSocketConnected()
 
             for await (let chunk of source) {
                 yield chunk
@@ -62,7 +57,6 @@ class UploadHandler {
 
                 this.lastMessageSent = Date.now()
 
-                console.log(prettyBytes(processedAlready))
                 socket.emit('file-upload', { processedAlready: prettyBytes(processedAlready), filename })
             }
         }
@@ -70,8 +64,12 @@ class UploadHandler {
         return handleData.bind(this)
     }
 
-    getSocket() {
-        const socket = require('./server')
+    canExecute(lastExecution) {
+        return (Date.now() - lastExecution) >= this.messageTimeDelay
+    }
+
+    getSocketConnected() {
+        const socket = require('./socket')
         return socket
     }
 }
